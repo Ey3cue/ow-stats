@@ -1,0 +1,14 @@
+[Unit]
+Description="OW Stats"
+Requires=network.target
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+Environment="CONFIG=/etc/ow-stats/config.js"
+WorkingDirectory=/opt/ow-stats
+ExecStart=/bin/node main.js
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

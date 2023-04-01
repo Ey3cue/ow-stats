@@ -1,0 +1,15 @@
+{
+  "name": "ow-stats",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "author": "Ey3cue",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.4"
+  }
+}
