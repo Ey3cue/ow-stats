@@ -1,4 +1,13 @@
 // Helper functions
+const url = {
+  set: (key, val) => {
+    const params = new URLSearchParams(location.search)
+    params.set(key, val)
+    history.replaceState(null, '', location.href.replace(location.search, '') + '?' + params.toString())
+  },
+  get: (key) => new URLSearchParams(location.search).get(key)
+}
+
 let loading = false
 const setLoading = (newLoading) => {
   loading = newLoading
@@ -249,6 +258,7 @@ const togglePanel = (id, enable) => {
   if (enable) {
     $(`#toggle-${id}`).addClass('active')
     $(`#panel-${id}`).show()
+    url.set('p', id)
     activate[id]()
   } else {
     $(`#toggle-${id}`).removeClass('active')
@@ -344,4 +354,5 @@ $('#form-date-s3').on('click', () => setDates('2023-02-07', ''))
 
 // Startup, default to current season
 $('#form-date-start').val('2023-02-07')
-togglePanel('wins-over-time')
+const startId = url.get('p')
+togglePanel(startId in activate ? startId : 'wins-over-time')
