@@ -262,6 +262,69 @@ const main = async () => {
         })
   })
 
+  app.get('/api/plot/wins-over-mode', (req, res) => {
+    const modes = []
+    const winRates = []
+    const totalGames = []
+
+    db.each(`SELECT
+          Mode,
+          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
+          COUNT(GameDate) AS TotalGames
+          FROM Games JOIN Maps ON Games.Map = Maps.Map
+          AND GameDate >= ? AND GameDate <= ? GROUP BY Mode ORDER BY Mode;`,
+          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
+        (e, row) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            modes.push(row.Mode)
+            winRates.push(round(row.Wins / row.TotalGames))
+            totalGames.push(row.TotalGames)
+          }
+        },
+        (e) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            res.json({ modes, winRates, totalGames })
+          }
+        })
+  })
+
+  app.get('/api/plot/wins-over-map', (req, res) => {
+    const maps = []
+    const winRates = []
+    const totalGames = []
+
+    db.each(`SELECT
+          Map,
+          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
+          COUNT(GameDate) AS TotalGames
+          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY Map ORDER BY Map;`,
+          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
+        (e, row) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            maps.push(row.Map)
+            winRates.push(round(row.Wins / row.TotalGames))
+            totalGames.push(row.TotalGames)
+          }
+        },
+        (e) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            res.json({ maps, winRates, totalGames })
+          }
+        })
+  })
+
   process.on('SIGINT', () => {
     console.log('Closing DB')
     db.close(() => process.exit())

@@ -175,6 +175,8 @@ chartActivation('fun-over-time', 'Fun',
 
 simpleBarActivation('wins-over-group-size', 'Group Size', 'groupSize')
 simpleBarActivation('wins-over-queue', 'Queues', 'queues')
+simpleBarActivation('wins-over-mode', 'Modes', 'modes')
+simpleBarActivation('wins-over-map', 'Maps', 'maps')
 
 const refreshAllPanels = () => {
   for (const id in activate) {
