@@ -53,6 +53,47 @@ const chartActivation = (id, title, genChartConfig) => {
   })
 }
 
+// Simple bar chart; provide X axis labels, it adds win rate and total games on the Y axes
+const simpleBarActivation = (id, title, labelKey) =>
+  chartActivation(id, title,
+    (res) => ({
+      type: 'bar',
+      plugins: [ChartDataLabels],
+      data: {
+        labels: res.data[labelKey],
+        datasets: [
+          {
+            label: 'Win Rate',
+            data: res.data.winRates,
+            yAxisID: 'winRate',
+          },
+          {
+            label: 'Total Games',
+            type: 'scatter',
+            data: res.data.totalGames,
+            yAxisID: 'totalGames'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          winRate: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            max: 1
+          },
+          totalGames: {
+            type: 'linear',
+            position: 'right',
+            min: 0
+          }
+        }
+      }
+    }))
+
 panelActivation('games', 'Games', (res) => {
   const rows = res.data
   let html = '<table class="table"><thead><tr>' +
@@ -132,81 +173,8 @@ chartActivation('fun-over-time', 'Fun',
     }
   }))
 
-chartActivation('wins-over-group-size', 'Group Size',
-  (res) => ({
-    type: 'bar',
-    plugins: [ChartDataLabels],
-    data: {
-      labels: res.data.groupSize,
-      datasets: [
-        {
-          label: 'Win Rate',
-          data: res.data.winRates,
-          yAxisID: 'winRate',
-        },
-        {
-          label: 'Total Games',
-          type: 'scatter',
-          data: res.data.totalGames,
-          yAxisID: 'totalGames'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      scales: {
-        winRate: {
-          type: 'linear',
-          position: 'left',
-          min: 0,
-          max: 1
-        },
-        totalGames: {
-          type: 'linear',
-          position: 'right'
-        }
-      }
-    }
-  }))
-
-chartActivation('wins-over-queue', 'Queues',
-  (res) => ({
-    type: 'bar',
-    plugins: [ChartDataLabels],
-    data: {
-      labels: res.data.queues,
-      datasets: [
-        {
-          label: 'Win Rate',
-          data: res.data.winRates,
-          yAxisID: 'winRate',
-        },
-        {
-          label: 'Total Games',
-          type: 'scatter',
-          data: res.data.totalGames,
-          yAxisID: 'totalGames'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      scales: {
-        winRate: {
-          type: 'linear',
-          position: 'left',
-          min: 0,
-          max: 1
-        },
-        totalGames: {
-          type: 'linear',
-          position: 'right'
-        }
-      }
-    }
-  }))
+simpleBarActivation('wins-over-group-size', 'Group Size', 'groupSize')
+simpleBarActivation('wins-over-queue', 'Queues', 'queues')
 
 const refreshAllPanels = () => {
   for (const id in activate) {
