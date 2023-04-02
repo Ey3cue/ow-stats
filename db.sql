@@ -27,7 +27,7 @@ INSERT OR IGNORE INTO Modes (Mode) VALUES ('Push');
 
 CREATE TABLE IF NOT EXISTS Maps(
   MapName TEXT PRIMARY KEY,
-  Mode INTEGER,
+  Mode TEXT,
 
   FOREIGN KEY (Mode) REFERENCES Modes(Mode)
 );
