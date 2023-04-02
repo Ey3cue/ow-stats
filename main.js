@@ -39,7 +39,7 @@ const main = async () => {
     }
   }
   app.get('/api/queues', handleDbList('Queue', 'Queues'))
-  app.get('/api/maps', handleDbList('MapName', 'Maps'))
+  app.get('/api/maps', handleDbList('Map', 'Maps'))
   app.get('/api/players', handleDbList('Player', 'Players'))
 
   // TVL; 0 = false, 1 = true, 2 = null
