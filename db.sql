@@ -1,15 +1,15 @@
 -- Created for Sqlite3
 
-CREATE TABLE IF NOT EXISTS Modes(
-  Mode TEXT PRIMARY KEY
+CREATE TABLE IF NOT EXISTS Queues(
+  Queue TEXT PRIMARY KEY
 );
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Unknown');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Quick Play: Open Queue');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Quick Play: Mystery');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Quick Play: Role Queue');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Competitive: Mystery');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Competitive: Open Queue');
-INSERT OR IGNORE INTO Modes (Mode) VALUES ('Competitive: Role Queue');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Unknown');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Quick Play: Open Queue');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Quick Play: Mystery');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Quick Play: Role Queue');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Competitive: Mystery');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Competitive: Open Queue');
+INSERT OR IGNORE INTO Queues (Queue) VALUES ('Competitive: Role Queue');
 
 
 CREATE TABLE IF NOT EXISTS MapTypes(
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS Players(
 CREATE TABLE IF NOT EXISTS Games(
   GameId INTEGER PRIMARY KEY AUTOINCREMENT,
   GameDate TEXT NOT NULL,
-  Mode TEXT NOT NULL,
+  Queue TEXT NOT NULL,
   Map TEXT NOT NULL,
   Player1 TEXT,
   Player2 TEXT,
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS Games(
   Win INTEGER CHECK (Win == 0 OR Win == 1),
   OneSided INTEGER CHECK (OneSided == 0 OR OneSided == 1 OR OneSided == 2),
 
-  FOREIGN KEY(Mode) REFERENCES Modes(Mode),
+  FOREIGN KEY(Queue) REFERENCES Queues(Queue),
   FOREIGN KEY(Map) REFERENCES Maps(MapName),
   FOREIGN KEY(Player1) REFERENCES Players(Player),
   FOREIGN KEY(Player2) REFERENCES Players(Player),

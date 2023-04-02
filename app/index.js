@@ -170,12 +170,12 @@ chartActivation('wins-over-group-size', 'Group Size',
     }
   }))
 
-chartActivation('wins-over-mode', 'Modes',
+chartActivation('wins-over-queue', 'Queues',
   (res) => ({
     type: 'bar',
     plugins: [ChartDataLabels],
     data: {
-      labels: res.data.modes,
+      labels: res.data.queues,
       datasets: [
         {
           label: 'Win Rate',
@@ -219,8 +219,8 @@ const refreshAllPanels = () => {
 
 const initError = () => $('#main').html('<h1>ERROR</h1>')
 const initPromises = []
-initPromises.push(axios.get('/api/modes')
-  .then((res) => $('#form-game-mode').html(res.data.map((val) => `<option value="${val}">${val}</option>`).join('')))
+initPromises.push(axios.get('/api/queues')
+  .then((res) => $('#form-game-queue').html(res.data.map((val) => `<option value="${val}">${val}</option>`).join('')))
   .catch(initError))
 initPromises.push(axios.get('/api/maps')
   .then((res) => $('#form-game-map').html(res.data.map((val) => `<option value="${val}">${val}</option>`).join('')))
@@ -327,7 +327,7 @@ $('#form-game-submit-btn').on('click', () => {
       'Content-Type': 'application/json'
     },
     data: {
-      mode: $('#form-game-mode').val(),
+      queue: $('#form-game-queue').val(),
       map: $('#form-game-map').val(),
       players,
       win: $('#form-game-win').val() === 'Yes',

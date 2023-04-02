@@ -38,7 +38,7 @@ const main = async () => {
       })
     }
   }
-  app.get('/api/modes', handleDbList('Mode', 'Modes'))
+  app.get('/api/queues', handleDbList('Queue', 'Queues'))
   app.get('/api/maps', handleDbList('MapName', 'Maps'))
   app.get('/api/players', handleDbList('Player', 'Players'))
 
@@ -51,7 +51,7 @@ const main = async () => {
   })
  
   // Add new game
-  // POST /api/game { mode: string, map: string, players: string[], win: bool, onesided: bool|null }
+  // POST /api/game { queue: string, map: string, players: string[], win: bool, onesided: bool|null }
   app.post('/api/game', (req, res) => {
     if (!cfg.allowAddsFrom.includes(req.ip)) {
       res.sendStatus(403)
@@ -65,10 +65,10 @@ const main = async () => {
       date.setDate(date.getDate() - 1)
     }
 
-    const { mode, map, players, win, onesided } = req.body
+    const { queue, map, players, win, onesided } = req.body
 
-    if (typeof mode !== 'string' || typeof map !== 'string') {
-      res.status(400).send('Mode and Map should be strings')
+    if (typeof queue !== 'string' || typeof map !== 'string') {
+      res.status(400).send('Queue and Map should be strings')
       return
     }
     if (Object.prototype.toString.call(players) !== '[object Array]') {
@@ -93,9 +93,9 @@ const main = async () => {
       return
     }
 
-    db.run(`INSERT INTO Games (GameDate, Mode, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided)
+    db.run(`INSERT INTO Games (GameDate, Queue, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        date.toISOString().substring(0, 10), mode, map, players[0], players[1], players[2], players[3], players[4], boolToInt(win), boolToInt(onesided),
+        date.toISOString().substring(0, 10), queue, map, players[0], players[1], players[2], players[3], players[4], boolToInt(win), boolToInt(onesided),
         (e) => {
           if (e) {
             console.error(e)
@@ -107,7 +107,7 @@ const main = async () => {
   })
 
   app.get('/api/plot/games', (req, res) => {
-    db.all(`SELECT GameDate, Mode, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided
+    db.all(`SELECT GameDate, Queue, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided
           FROM Games WHERE GameDate >= ? AND GameDate <= ? ORDER BY GameDate DESC`,
         req.query.start || '0000-00-00', req.query.end || '9999-99-99',
         (e, rows) => {
@@ -117,7 +117,7 @@ const main = async () => {
           } else {
             const resRows = rows.map((row) => [
                   row.GameDate,
-                  (row.Mode === 'Unknown' ? null : row.Mode),
+                  (row.Queue === 'Unknown' ? null : row.Queue),
                   (row.Map === 'Unknown' ? null : row.Map),
                   row.Player1,
                   row.Player2,
@@ -127,7 +127,7 @@ const main = async () => {
                   intToBool(row.Win),
                   intToBool(row.OneSided)
                 ])
-            resRows.unshift(['Date', 'Mode', 'Map', 'Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Win', 'One-sided'])
+            resRows.unshift(['Date', 'Queue', 'Map', 'Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Win', 'One-sided'])
             res.json(resRows)
           }
         })
@@ -231,23 +231,23 @@ const main = async () => {
     )
   })
 
-  app.get('/api/plot/wins-over-mode', (req, res) => {
-    const modes = []
+  app.get('/api/plot/wins-over-queue', (req, res) => {
+    const queues = []
     const winRates = []
     const totalGames = []
 
     db.each(`SELECT
-          Mode,
+          Queue,
           SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
           COUNT(GameDate) AS TotalGames
-          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY Mode ORDER BY Mode;`,
+          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY Queue ORDER BY Queue;`,
           req.query.start || '0000-00-00', req.query.end || '9999-99-99',
         (e, row) => {
           if (e) {
             console.error(e)
             res.status(500).send(e)
           } else {
-            modes.push(row.Mode)
+            queues.push(row.Queue)
             winRates.push(round(row.Wins / row.TotalGames))
             totalGames.push(row.TotalGames)
           }
@@ -257,7 +257,7 @@ const main = async () => {
             console.error(e)
             res.status(500).send(e)
           } else {
-            res.json({ modes, winRates, totalGames })
+            res.json({ queues, winRates, totalGames })
           }
         })
   })
