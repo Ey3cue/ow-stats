@@ -209,11 +209,11 @@ const main = async () => {
               if (row['Player' + i] != null) {
                 groupSize++
               }
-              if (row.Win == 1) {
-                wins[groupSize - 1]++
-              }
-              totalGames[groupSize - 1]++
             }
+            if (row.Win == 1) {
+              wins[groupSize - 1]++
+            }
+            totalGames[groupSize - 1]++
           }
         },
         (e) => {
