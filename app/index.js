@@ -225,9 +225,10 @@ seasonsPromise.then((response) => {
     const $btn = $(`<button class="btn btn-outline-secondary" type="button">S${s.Id}</button>`)
     $('#form-date-group').append($btn)
     $btn.on('click', () => setDates(s.Begin, s.End || ''))
-    // Default to current season on start
-    $('#form-date-begin').val(seasons[seasons.length - 1].begin)
   }
+  // Default to current season on start
+  $('#form-date-begin').val(seasons[seasons.length - 1].Begin)
+  $('#form-date-end').val('')
 })
 
 // Set up combined panel inputs

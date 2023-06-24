@@ -18,7 +18,6 @@ if [[ $1 != "remove" ]]; then
   mkdir -vp /opt/ow-stats/
 
   cp -rv app/ /opt/ow-stats/
-  cp -rv server/ /opt/ow-stats/
   cp -v main.js /opt/ow-stats/
   cp -v package.json /opt/ow-stats/
 
