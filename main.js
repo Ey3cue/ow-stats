@@ -42,13 +42,25 @@ const main = async () => {
   app.get('/api/maps', handleDbList('Map', 'Maps'))
   app.get('/api/players', handleDbList('Player', 'Players'))
 
-  // TVL; 0 = false, 1 = true, 2 = null
-  const boolToInt = (v) => v === null ? 2 : (v ? 1 : 0)
-  const intToBool = (v) => v === 2 ? null : v === 1
-
+  app.get('/api/seasons', (req, res) => {
+    db.all('SELECT id, begin, end FROM Seasons ORDER BY id;',
+        (e, rows) => {
+          if (e) {
+            console.error(`Error selecting from [Seasons]: [${e}]`)
+            res.sendStatus(500)
+            return
+          }
+          res.json(rows)
+        })
+  })
+  
   app.get('/api/allowed', (req, res) => {
     res.json(cfg.allowAddsFrom.includes(req.ip))
   })
+
+  // TVL; 0 = false, 1 = true, 2 = null
+  const boolToInt = (v) => v === null ? 2 : (v ? 1 : 0)
+  const intToBool = (v) => v === 2 ? null : v === 1
  
   // Add new game
   // POST /api/game { queue: string, map: string, players: string[], win: bool, onesided: bool|null }
@@ -106,51 +118,25 @@ const main = async () => {
         })
   })
 
-  app.get('/api/plot/games', (req, res) => {
-    db.all(`SELECT GameDate, Queue, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided
-          FROM Games WHERE GameDate >= ? AND GameDate <= ? ORDER BY GameDate DESC`,
-        req.query.start || '0000-00-00', req.query.end || '9999-99-99',
-        (e, rows) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            const resRows = rows.map((row) => [
-                  row.GameDate,
-                  (row.Queue === 'Unknown' ? null : row.Queue),
-                  (row.Map === 'Unknown' ? null : row.Map),
-                  row.Player1,
-                  row.Player2,
-                  row.Player3,
-                  row.Player4,
-                  row.Player5,
-                  intToBool(row.Win),
-                  intToBool(row.OneSided)
-                ])
-            resRows.unshift(['Date', 'Queue', 'Map', 'Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Win', 'One-sided'])
-            res.json(resRows)
-          }
-        })
-  })
-
-  app.get('/api/plot/wins-over-time', (req, res) => {
-    const dates = []
-    const winRates = []
-    const totalGames = []
-    db.each(`SELECT
-          GameDate,
-          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins, 
-          COUNT(GameDate) AS TotalGames
-          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY GameDate ORDER BY GameDate;`,
-        req.query.start || '0000-00-00', req.query.end || '9999-99-99',
+  app.get('/api/games', (req, res) => {
+    const games = []
+    db.each('SELECT GameDate, Queue, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided FROM Games',
         (e, row) => {
           if (e) {
             console.error(e)
             res.status(500).send(e)
           } else {
-            dates.push(row.GameDate)
-            winRates.push(round(row.Wins / row.TotalGames))
-            totalGames.push(row.TotalGames)
+            const { GameDate, Queue, Map, Win, OneSided } = row
+
+            const players = []
+            for (let i = 1; i <= 5; ++i) {
+              const player = row[`Player${i}`]
+              if (player) {
+                players.push(player)
+              }
+            }
+
+            games.push([GameDate, Queue, Map, players, intToBool(Win), intToBool(OneSided)])
           }
         },
         (e) => {
@@ -158,13 +144,47 @@ const main = async () => {
             console.error(e)
             res.status(500).send(e)
           } else {
-            res.json({ dates, winRates, totalGames })
+            res.json(games)
           }
         })
   })
 
-  app.get('/api/plot/fun-over-time', (req, res) => {
+  app.get('/api/plot/games', (req, res) => {
+    db.all(`SELECT GameDate, Queue, Map, Player1, Player2, Player3, Player4, Player5, Win, OneSided
+          FROM Games WHERE GameDate >= ? AND GameDate <= ? ORDER BY GameDate DESC`,
+        req.query.begin || '0000-00-00', req.query.end || '9999-99-99',
+        (e, rows) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            const resRows = rows.map((row) => {
+                const players = []
+                for (let i = 1; i <= 5; ++i) {
+                  const player = row['Player' + i]
+                  if (player) {
+                    players.push(player)
+                  }
+                }
+
+                return [
+                  row.GameDate,
+                  (row.Queue === 'Unknown' ? null : row.Queue),
+                  (row.Map === 'Unknown' ? null : row.Map),
+                  players,
+                  intToBool(row.Win),
+                  intToBool(row.OneSided)
+                ]
+              })
+            res.json(resRows)
+          }
+        })
+  })
+
+  app.get('/api/plot/over-time', (req, res) => {
     const dates = []
+    const winRates = []
+    const totalGames = []
     const fun = []
     db.each(`SELECT
           GameDate,
@@ -173,13 +193,15 @@ const main = async () => {
           SUM(CASE WHEN Win = 0 AND OneSided = 1 THEN 1 ELSE 0 END) AS OneSidedLosses,
           COUNT(GameDate) AS TotalGames
           FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY GameDate ORDER BY GameDate;`,
-          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
+        req.query.begin || '0000-00-00', req.query.end || '9999-99-99',
         (e, row) => {
           if (e) {
             console.error(e)
             res.status(500).send(e)
           } else {
             dates.push(row.GameDate)
+            winRates.push(round(row.Wins / row.TotalGames))
+            totalGames.push(row.TotalGames)
             fun.push(((row.Wins / (row.TotalGames + row.OneSidedLosses)) - 0.5) * row.TotalGames)
           }
         },
@@ -188,32 +210,81 @@ const main = async () => {
             console.error(e)
             res.status(500).send(e)
           } else {
-            res.json({ dates, fun })
+            res.json({ dates, winRates, totalGames, fun })
           }
         })
   })
 
-  app.get('/api/plot/wins-over-group-size', (req, res) => {
-    const wins = [0, 0, 0, 0, 0]
-    const totalGames = [0, 0, 0, 0, 0]
-    db.each(`SELECT Player1, Player2, Player3, Player4, Player5, Win
-          FROM Games WHERE GameDate >= ? AND GameDate <= ?;`,
-          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
+  const combinedValues = ['Queue', 'Map', 'Mode', 'GroupSize']
+  app.get('/api/plot/combined/options', (req, res) => res.json(combinedValues))
+  app.get('/api/plot/combined', (req, res) => {
+    const { first, second, begin, end } = req.query
+
+    // Sanitizing by making sure first and second are one of the valid values; can't bind parameters
+    // as column names apparently
+    if (!combinedValues.includes(first) || (second != null && !combinedValues.includes(second))) {
+      res.status(400).send(`first and second must be one of [${combinedValues.join(', ')}]`)
+      return
+    }
+
+    if (second == null) {
+      const firsts = []
+      const winRates = []
+      const totalGames = []
+
+      db.each(`SELECT
+          ${first},
+          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
+          COUNT(*) AS TotalGames
+          FROM GamesFull WHERE GameDate >= ? AND GameDate <= ? GROUP BY ${first} ORDER BY ${first};`,
+        begin || '0000-00-00', end || '9999-99-99',
         (e, row) => {
           if (e) {
             console.error(e)
             res.status(500).send(e)
           } else {
-            let groupSize = 0
-            for (let i = 1; i <= 5; ++i) {
-              if (row['Player' + i] != null) {
-                groupSize++
+            firsts.push(row[first])
+            winRates.push(round(row.Wins / row.TotalGames))
+            totalGames.push(row.TotalGames)
+          }
+        },
+        (e) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            res.json({ firsts, winRates, totalGames })
+          }
+        })
+    } else {
+      const firsts = new Set()
+      const seconds = new Set()
+      const data = {}
+
+      db.each(`SELECT
+          ${first},
+          ${second},
+          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
+          COUNT(*) AS TotalGames
+          FROM GamesFull WHERE GameDate >= ? AND GameDate <= ?
+          GROUP BY ${first}, ${second} ORDER BY ${first}, ${second};`,
+        begin || '0000-00-00', end || '9999-99-99',
+        (e, row) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            firsts.add(row[first])
+            seconds.add(row[second])
+            if (!data[row[first]]) {
+              data[row[first]] = {}
+            }
+            if (!data[row[first]][row[second]]) {
+              data[row[first]][row[second]] = {
+                wins: row.Wins,
+                totalGames: row.TotalGames
               }
             }
-            if (row.Win == 1) {
-              wins[groupSize - 1]++
-            }
-            totalGames[groupSize - 1]++
           }
         },
         (e) => {
@@ -222,107 +293,28 @@ const main = async () => {
             res.status(500).send(e)
           } else {
             const winRates = []
-            for (let i = 0; i < wins.length; i++) {
-              winRates[i] = round(wins[i] / totalGames[i])
+            const totalGames = []
+            for (const second of seconds) {
+              const subWinRates = []
+              const subTotalGames = []
+              winRates.push(subWinRates)
+              totalGames.push(subTotalGames)
+              for (const first of firsts)  {
+                if (data[first] && data[first][second]) {
+                  const entry = data[first][second]
+                  subWinRates.push(entry.wins / entry.totalGames)
+                  subTotalGames.push(entry.totalGames)
+                } else {
+                  subWinRates.push(0)
+                  subTotalGames.push(0)
+                }
+              }
             }
-            res.json({ groupSize: [1, 2, 3, 4, 5], winRates, totalGames })
-          }
-        }
-    )
-  })
 
-  app.get('/api/plot/wins-over-queue', (req, res) => {
-    const queues = []
-    const winRates = []
-    const totalGames = []
-
-    db.each(`SELECT
-          Queue,
-          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
-          COUNT(GameDate) AS TotalGames
-          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY Queue ORDER BY Queue;`,
-          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
-        (e, row) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            queues.push(row.Queue)
-            winRates.push(round(row.Wins / row.TotalGames))
-            totalGames.push(row.TotalGames)
-          }
-        },
-        (e) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            res.json({ queues, winRates, totalGames })
+            res.json({ firsts: Array.from(firsts), seconds: Array.from(seconds), winRates, totalGames })
           }
         })
-  })
-
-  app.get('/api/plot/wins-over-mode', (req, res) => {
-    const modes = []
-    const winRates = []
-    const totalGames = []
-
-    db.each(`SELECT
-          Mode,
-          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
-          COUNT(GameDate) AS TotalGames
-          FROM Games JOIN Maps ON Games.Map = Maps.Map
-          AND GameDate >= ? AND GameDate <= ? GROUP BY Mode ORDER BY Mode;`,
-          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
-        (e, row) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            modes.push(row.Mode)
-            winRates.push(round(row.Wins / row.TotalGames))
-            totalGames.push(row.TotalGames)
-          }
-        },
-        (e) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            res.json({ modes, winRates, totalGames })
-          }
-        })
-  })
-
-  app.get('/api/plot/wins-over-map', (req, res) => {
-    const maps = []
-    const winRates = []
-    const totalGames = []
-
-    db.each(`SELECT
-          Map,
-          SUM(CASE WHEN Win = 1 THEN 1 ELSE 0 END) As Wins,
-          COUNT(GameDate) AS TotalGames
-          FROM Games WHERE GameDate >= ? AND GameDate <= ? GROUP BY Map ORDER BY Map;`,
-          req.query.start || '0000-00-00', req.query.end || '9999-99-99',
-        (e, row) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            maps.push(row.Map)
-            winRates.push(round(row.Wins / row.TotalGames))
-            totalGames.push(row.TotalGames)
-          }
-        },
-        (e) => {
-          if (e) {
-            console.error(e)
-            res.status(500).send(e)
-          } else {
-            res.json({ maps, winRates, totalGames })
-          }
-        })
+    }
   })
 
   process.on('SIGINT', () => {

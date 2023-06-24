@@ -75,6 +75,18 @@ CREATE TABLE IF NOT EXISTS Players(
   Player TEXT PRIMARY KEY
 );
 
+CREATE TABLE IF NOT EXISTS Seasons(
+  Id INTEGER PRIMARY KEY,
+  Begin TEXT NOT NULL,
+  End TEXT
+);
+
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (1, '2022-10-04', '2022-12-05');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (2, '2022-12-06', '2023-02-06');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (3, '2023-02-07', '2023-04-10');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (4, '2023-04-11', '2023-06-12');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (5, '2023-06-13', '');
+
 CREATE TABLE IF NOT EXISTS Games(
   GameId INTEGER PRIMARY KEY AUTOINCREMENT,
   GameDate TEXT NOT NULL,
@@ -96,3 +108,25 @@ CREATE TABLE IF NOT EXISTS Games(
   FOREIGN KEY(Player4) REFERENCES Players(Player),
   FOREIGN KEY(Player5) REFERENCES Players(Player)
 );
+
+CREATE VIEW GamesFull AS
+  SELECT
+    Games.GameDate,
+    Games.Queue,
+    Games.Map,
+    Maps.Mode,
+    CASE WHEN Games.Player1 IS NULL THEN 0 ELSE 1 END +
+    CASE WHEN Games.Player2 IS NULL THEN 0 ELSE 1 END +
+    CASE WHEN Games.Player3 IS NULL THEN 0 ELSE 1 END +
+    CASE WHEN Games.Player4 IS NULL THEN 0 ELSE 1 END +
+    CASE WHEN Games.Player5 IS NULL THEN 0 ELSE 1 END 
+    AS GroupSize,
+    Games.Player1,
+    Games.Player2,
+    Games.Player3,
+    Games.Player4,
+    Games.Player5,
+    Games.Win,
+    Games.OneSided
+  FROM Games
+  JOIN Maps on Games.Map = Maps.Map;

@@ -1,0 +1,39 @@
+.loader-screen, .loader-bg {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+.loader-bg {
+  height: calc(100vh - 72px);
+  background-color: #212529;
+}
+.loader {
+  display: block;
+  position: absolute;
+  left: calc(50% - 60px);
+  top: calc(50% - 60px);
+  width: 120px;
+  height: 120px;
+  z-index: 1;
+}
+
+.panel {
+  display: none;
+}
+
+.chart {
+  /*width: 0;  /* Makes the charts resize with the `col`s, not sure why */
+  height: calc(100vh - 140px);
+}
+.chart-resizer {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.input-group > .form-select {
+  min-width: 150px;
+}

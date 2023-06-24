@@ -7,70 +7,34 @@
   <title>Shimada Stats</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <link rel="stylesheet" href="index.css">
   <style>
-    .loader-screen, .loader-bg {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1;
-    }
-    .loader-bg {
-      height: calc(100vh - 72px);
-      background-color: #212529;
-    }
-    .loader {
-      display: block;
-      position: absolute;
-      left: calc(50% - 60px);
-      top: calc(50% - 60px);
-      width: 120px;
-      height: 120px;
-      z-index: 1;
-    }
-    .form-game-allowed {
-      display: none;
-    }
-    .content > div {
-      display: none;
-    }
-    .chart {
-      width: 0;  /* Makes the charts resize with the `col`s, not sure why */
-      height: calc(100vh - 72px);
-    }
-    .chart-resizer {
-      position: relative;
-      height: 100%;
-      width: 100%;
-    }
   </style>
 </head>
 
 <body>
   <main>
+    <!-- Loader -->
     <div class="loading loader-screen"></div>
     <div class="loading loader-bg"></div>
     <div class="loading loader spinner-border"></div>
-    <div id="main" class="container-fluid mt-3">
+    <!-- Nav -->
+    <div class="container-fluid mt-3">
       <div class="row row-cols-lg-auto justify-content-center mb-3">
         <div class="col">
-          <ul id="toggle-list" class="nav nav-pills">
-            <!-- Each `toggle-{}` corresponds to `panel-{}` below -->
-            <li class="nav-item me-2 form-game-allowed"><a id="toggle-form-game" class="nav-link" aria-current="page" href="#">Add New</a></li>
-            <div class="vr me-2 form-game-allowed"></div>
+          <ul class="nav nav-pills">
+            <li class="nav-item me-2"><a id="tab-games" class="tab nav-link" aria-current="page" href="#">Games</a></li>
+            <li class="nav-item me-2"><a id="tab-time" class="tab nav-link" aria-current="page" href="#">Over Time</a></li>
+            <li class="nav-item me-2"><a id="tab-combined" class="tab nav-link" aria-current="page" href="#">Combined</a></li>
           </ul>
         </div>
         <div class="col d-flex align-items-center">
-          <div class="input-group">
-            <input type="date" class="form-control" id="form-date-start">
+          <div id="form-date-group" class="input-group">
+            <input type="date" class="form-control" id="form-date-begin">
             <span class="input-group-text">to</span>
             <input type="date" class="form-control" id="form-date-end">
             <button class="btn btn-outline-secondary" type="button" id="form-date-clear">All</button>
-            <button class="btn btn-outline-secondary" type="button" id="form-date-s1">S1</button>
-            <button class="btn btn-outline-secondary" type="button" id="form-date-s2">S2</button>
-            <button class="btn btn-outline-secondary" type="button" id="form-date-s3">S3</button>
             <!-- For a dropdown -->
             <!-- <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Season</button>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -80,54 +44,39 @@
           </div>
         </div>
       </div>
-      <div id="panel-container" class="row justify-content-center content">
-        <!-- Game entry form -->
-        <div id="panel-form-game" class="col-2">
-          <form>
-            <div class="mb-3">
-              <label for="form-game-queue" class="form-label">Queue</label>
-              <select name="form-game-queue" id="form-game-queue" class="form-select"></select>
+    </div>
+    <!-- Content -->
+    <div class="container-fluid">
+      <div id="panel-games" class="panel"></div>
+      <div id="panel-time" class="panel chart"></div>
+      <div id="panel-combined" class="panel">
+        <div class="row row-cols-lg-auto justify-content-center mb-3">
+          <div class="col d-flex align-items-center">
+            <div class="input-group">
+              <span class="input-group-text">Win Rate</span>
+              <span class="input-group-text">by</span>
+              <select id="form-combined-first" class="form-select"></select>
+              <span class="input-group-text">then by</span>
+              <select id="form-combined-second" class="form-select"></select>
             </div>
-            <div class="mb-3">
-              <label for="form-game-map" class="form-label">Map</label>
-              <select name="form-game-map" id="form-game-map" class="form-select"></select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Players</label>
-              <br>
-              <div id="form-game-players"></div>
-            </div>
-            <div class="mb-3">
-              <label for="form-game-win" class="form-label">Win</label>
-              <select name="form-game-win" id="form-game-win" class="form-select">
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label for="form-game-onesided" class="form-label">One-sided</label>
-              <select name="form-game-onesided" id="form-game-onesided" class="form-select">
-                <option value="n/a">n/a</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-            </div>
-            <div class="mb-3 d-grid gap-2">
-              <button type="button" id="form-game-submit-btn" class="btn btn-primary">Add Game</button>
-            </div>
-          </form>
+          </div>
         </div>
-        <!-- /Game entry form -->
+        <div class="row">
+          <div class="col">
+            <div id="chart-combined" class="chart"></div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-  <script src="index.js"></script>
+  <script type="module" src="index.js"></script>
 </body>
 
 </html>
