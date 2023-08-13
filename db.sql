@@ -22,6 +22,7 @@ INSERT OR IGNORE INTO Modes (Mode) VALUES ('Capture the Flag');
 INSERT OR IGNORE INTO Modes (Mode) VALUES ('Control');
 INSERT OR IGNORE INTO Modes (Mode) VALUES ('Deathmatch');
 INSERT OR IGNORE INTO Modes (Mode) VALUES ('Elimination');
+INSERT OR IGNORE INTO Modes (Mode) VALUES ('Flashpoint');
 INSERT OR IGNORE INTO Modes (Mode) VALUES ('Hybrid');
 INSERT OR IGNORE INTO Modes (Mode) VALUES ('Push');
 
@@ -59,6 +60,7 @@ INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Midtown', 'Hybrid');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Necropolis', 'Elimination');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Nepal', 'Control');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('New Queen Street', 'Push');
+INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('New Junk City', 'Flashpoint');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Numbani', 'Hybrid');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Oasis', 'Control');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Paraiso', 'Hybrid');
@@ -67,6 +69,7 @@ INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Petra', 'Deathmatch');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Rialto', 'Escort');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Route 66', 'Escort');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Shambali', 'Escort');
+INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Suravasa', 'Flashpoint');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Temple of Anubis', 'Assault');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Volskaya Industries', 'Assault');
 INSERT OR IGNORE INTO Maps (Map, Mode) VALUES ('Watchpoint: Gibraltar', 'Escort');
@@ -85,7 +88,8 @@ INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (1, '2022-10-04', '2022-12
 INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (2, '2022-12-06', '2023-02-06');
 INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (3, '2023-02-07', '2023-04-10');
 INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (4, '2023-04-11', '2023-06-12');
-INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (5, '2023-06-13', '');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (5, '2023-06-13', '2023-08-09');
+INSERT OR IGNORE INTO Seasons (Id, Begin, End) VALUES (6, '2023-08-10', '');
 
 CREATE TABLE IF NOT EXISTS Games(
   GameId INTEGER PRIMARY KEY AUTOINCREMENT,
