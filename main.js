@@ -215,6 +215,108 @@ const main = async () => {
         })
   })
 
+  app.get('/api/plot/streaks', (req, res) => {
+    const dates = []
+    const winStreaks = []
+    const loseStreaks = []
+
+    const minStreak = 3
+
+    let winDate = null
+    let winStreak = 0
+    let wonLast = null
+    let loseDate = null
+    let loseStreak = 0
+    let lostLast = null
+
+    const endWinningStreak = () => {
+      if (winStreak >= minStreak) {
+        if (wonLast && winStreak > 0) {
+          // End of winning streak, add to data
+          if (dates[dates.length - 1] === winDate && winStreaks[winStreaks.length - 1] == null) {
+            winStreaks[winStreaks.length - 1] = winStreak
+          } else {
+            dates.push(winDate)
+            winStreaks.push(winStreak)
+            loseStreaks.push(null)
+          }
+        }
+      }
+      winDate = null
+      winStreak = 0
+      wonLast = false
+    }
+
+    const endLosingStreak = () => {
+      if (loseStreak >= minStreak) {
+        if (lostLast && loseStreak > 0) {
+          // End of losing streak, add to data
+          if (dates[dates.length - 1] === loseDate && loseStreaks[loseStreaks.length - 1] == null) {
+            loseStreaks[loseStreaks.length - 1] = loseStreak
+          } else {
+            dates.push(loseDate)
+            loseStreaks.push(loseStreak)
+            winStreaks.push(null)
+          }
+        }
+      }
+      loseDate = null
+      loseStreak = 0
+      lostLast = false
+    }
+
+    db.each(`SELECT
+          GameDate,
+          Win
+          FROM Games WHERE GameDate >= ? AND GameDate <= ? ORDER BY GameDate;`,
+        req.query.begin || '0000-00-00', req.query.end || '9999-99-99',
+        (e, row) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            // if (parseInt(row.GameDate.replaceAll('-', '')) > 20221205) { return }
+            // console.log(JSON.stringify(row))
+
+            if (row.Win === 1) {
+              endLosingStreak()
+
+              if (wonLast) {
+                // Currently in a streak
+                winStreak++
+              } else {
+                // Start of new win streak
+                winDate = row.GameDate
+                winStreak = 1
+                wonLast = true
+              }
+            } else {  // Lost
+              endWinningStreak()
+
+              if (lostLast) {
+                // Currently in a streak
+                loseStreak++
+              } else {
+                // Start of new lose streak
+                loseDate = row.GameDate
+                loseStreak = 1
+                lostLast = true
+              }
+            }
+          }
+        },
+        (e) => {
+          if (e) {
+            console.error(e)
+            res.status(500).send(e)
+          } else {
+            endLosingStreak()
+            endWinningStreak()
+            res.json({ dates, winStreaks, loseStreaks })
+          }
+        })
+  })
+
   const combinedValues = ['Queue', 'Map', 'Mode', 'GroupSize']
   app.get('/api/plot/combined/options', (req, res) => res.json(combinedValues))
   app.get('/api/plot/combined', (req, res) => {

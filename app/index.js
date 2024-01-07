@@ -111,6 +111,46 @@ const refresh = async () => {
       }
     })
 
+  } else if ($('#panel-streaks').is(':visible')) {
+    const { dates, winStreaks, loseStreaks } = (await axios.get('/api/plot/streaks')).data
+    new Chart(initCanvas($('#panel-streaks')), {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Win Streaks',
+            data: winStreaks,
+            showLine: false,
+            yAxisID: 'count'
+          },
+          {
+            label: 'LoseStreaks',
+            data: loseStreaks,
+            showLine: false,
+            yAxisID: 'count'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        // spanGaps: true,
+        scales: {
+          count: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            title: {
+              display: true,
+              text: 'Streaks'
+            }
+          }
+        }
+      }
+    })
+
   } else if ($('#panel-combined').is(':visible')) {
     const first = $('#form-combined-first').val()
     const second = $('#form-combined-second').val() == 'none' ? null : $('#form-combined-second').val()
