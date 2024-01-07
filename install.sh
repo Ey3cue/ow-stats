@@ -10,6 +10,8 @@ fi
 if [[ $1 != "remove" ]]; then
   # Install
   set -o errexit
+  
+  systemctl stop ow-stats
 
   command -v node
   command -v npm
